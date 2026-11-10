@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lancer Firewall Lab</title>
+<style>
+:root{--navy:#0f2347;--navy2:#1b3566;--gold:#e0b43c;--bg:#f3f5f9;--ok:#1e8a4c;--bad:#c0392b;--ink:#1c2333;--mut:#5d6779}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:20px;margin:0}
+header .sub{color:var(--gold);font-size:13px}
+nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+nav button{background:var(--navy2);color:#fff;border:1px solid #33508a;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:14px}
+nav button.on{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700}
+main{max-width:1050px;margin:0 auto;padding:18px}
+.card{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:18px;margin-bottom:16px}
+h2{margin:0 0 6px;font-size:19px;color:var(--navy)}
+h3{margin:14px 0 6px;font-size:15px;color:var(--navy)}
+p{line-height:1.5;margin:6px 0}
+.story{background:#fff8e3;border-left:4px solid var(--gold);padding:10px 14px;border-radius:6px;margin:10px 0}
+.net{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:13px;margin:10px 0}
+.node{border:2px solid var(--navy2);border-radius:8px;padding:8px 10px;text-align:center;background:#f8faff;min-width:120px}
+.node b{display:block;font-size:13px}
+.node.fw{background:var(--navy);color:#fff;border-color:var(--gold)}
+.arrow{color:var(--mut);font-weight:700}
+.levels{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.levels button{border:1px solid #c9d1e0;background:#fff;border-radius:20px;padding:5px 12px;cursor:pointer;font-size:13px}
+.levels button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.levels button.done::after{content:" ✓";color:var(--ok);font-weight:700}
+.levels button.on.done::after{color:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:6px 6px;border-bottom:1px solid #e3e7ef;text-align:left;vertical-align:middle}
+th{background:#eef1f7;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--mut)}
+select{font-size:14px;padding:4px;border:1px solid #c3cbdb;border-radius:5px;background:#fff}
+.mini{border:1px solid #c3cbdb;background:#fff;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:13px}
+.mini:hover{background:#eef1f7}
+.implicit td{color:var(--mut);font-style:italic;background:#fafbfd}
+.btn{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:15px;cursor:pointer;margin:8px 8px 0 0}
+.btn.gold{background:var(--gold);color:var(--navy);font-weight:700}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:700}
+.tag.allow{background:#d9f2e3;color:var(--ok)}
+.tag.deny{background:#f8dcd8;color:var(--bad)}
+tr.pass td:first-child{border-left:4px solid var(--ok)}
+tr.fail td:first-child{border-left:4px solid var(--bad)}
+tr.hit{background:#fff4cc}
+.result{margin-top:10px;padding:10px 14px;border-radius:7px;font-weight:600}
+.result.ok{background:#d9f2e3;color:#145c33}
+.result.no{background:#f8dcd8;color:#7d2219}
+.hint{font-size:13px;color:var(--mut)}
+pre.log{background:#0d1424;color:#b8f5c4;padding:12px;border-radius:8px;font-size:12.5px;overflow-x:auto;line-height:1.45}
+.q{margin:10px 0}
+.opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.opts button{border:1px solid #c3cbdb;background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:14px}
+.opts button.sel{background:var(--navy);color:#fff}
+.opts button.right{background:var(--ok);color:#fff;border-color:var(--ok)}
+.opts button.wrong{background:var(--bad);color:#fff;border-color:var(--bad)}
+.cert{border:4px double var(--gold);padding:24px;text-align:center;background:#fffdf5}
+.cert h2{font-size:24px}
+.code{font-family:ui-monospace,Consolas,monospace;font-size:20px;letter-spacing:2px;color:var(--navy);background:#eef1f7;padding:6px 12px;border-radius:6px;display:inline-block}
+input[type=text]{font-size:16px;padding:7px;border:1px solid #c3cbdb;border-radius:6px;width:260px}
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.term{background:#f8faff;border:1px solid #dfe5f0;border-radius:8px;padding:10px;font-size:14px}
+.term b{color:var(--navy)}
+.slide{min-height:340px;font-size:17px}
+.slide h2{font-size:26px;margin-bottom:12px}
+.slide .big{font-size:52px;text-align:center;margin:6px 0}
+.slide ul{line-height:1.7;padding-left:22px}
+.slide-top{display:flex;justify-content:space-between;align-items:center}
+.dots{display:flex;gap:5px}.dots span{width:9px;height:9px;border-radius:50%;background:#d3d9e6}.dots span.on{background:var(--navy)}
+.slide-nav{display:flex;justify-content:space-between;margin-top:10px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.box{background:#f8faff;border:1px solid #dfe5f0;border-radius:10px;padding:12px}
+.box h4{margin:0 0 6px;color:var(--navy)}
+.q-check{background:#eef1f7;border-radius:8px;padding:10px 14px;margin-top:12px}
+@media (max-width:700px){th:nth-child(3),td:nth-child(3){display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🛡️ Lancer Firewall Lab</h1><div class="sub">AP Cybersecurity · Unit 3 · Topics 3.4 & 3.5</div></div>
+  <nav>
+    <button data-tab="lesson" class="on">Lesson</button>
+    <button data-tab="brief">Briefing</button>
+    <button data-tab="rules">Part 1: Build the Rules</button>
+    <button data-tab="logs">Part 2: Log Detective</button>
+    <button data-tab="cert">Certificate</button>
+  </nav>
+</header>
+<main>
+
+<section id="lesson" class="tab">
+  <div class="card slide-card">
+    <div class="slide-top"><span id="slideNum" class="hint"></span><div class="dots" id="dots"></div></div>
+    <div id="slide" class="slide"></div>
+    <div class="slide-nav"><button class="btn ghost" onclick="slideGo(-1)">← Back</button><button class="btn gold" id="nextBtn" onclick="slideGo(1)">Next →</button></div>
+    <p class="hint" style="text-align:center">Tip: you can use the ← → arrow keys.</p>
+  </div>
+</section>
+
+<section id="brief" class="tab" hidden>
+  <div class="card">
+    <h2>Mission briefing</h2>
+    <div class="story"><b>From: Carlos, IT Director</b><br>
+    Our firewall got reset over the weekend, so right now it's blocking everything. I need you to rebuild the rules so families can reach the school website while attackers stay out. After that, I'll need help reading the logs. Something weird hit us last night.</div>
+    <h3>The Cambridge network</h3>
+    <div class="net">
+      <div class="node"><b>🌐 Internet</b>parents, attackers,<br>Carlos at home</div><span class="arrow">⟶</span>
+      <div class="node fw"><b>🧱 Firewall</b>checks every packet</div><span class="arrow">⟶</span>
+      <div class="node"><b>🖥️ Web Server (DMZ)</b>10.0.1.10</div>
+      <div class="node"><b>🏫 Campus Network</b>10.0.2.0/24<br>(student &amp; staff devices)</div>
+    </div>
+    <h3>How a firewall reads its rules (ACL)</h3>
+    <div class="terms">
+      <div class="term"><b>1. Top to bottom.</b> Each packet is checked against rule 1, then rule 2, and so on.</div>
+      <div class="term"><b>2. First match wins.</b> As soon as a rule matches, the firewall stops looking. <i>Order matters!</i></div>
+      <div class="term"><b>3. Implicit deny.</b> If nothing matches, the packet is blocked. This is called <i>default deny</i>.</div>
+      <div class="term"><b>A rule checks:</b> action (allow/deny), protocol (TCP/UDP), source IP, destination IP, and destination port.</div>
+    </div>
+    <h3>Ports you'll need</h3>
+    <div class="terms">
+      <div class="term"><b>22</b> SSH (remote admin login)</div>
+      <div class="term"><b>53</b> DNS (UDP, looks up website names)</div>
+      <div class="term"><b>80</b> HTTP (unencrypted web)</div>
+      <div class="term"><b>443</b> HTTPS (encrypted web)</div>
+      <div class="term"><b>445</b> SMB (Windows file sharing)</div>
+      <div class="term"><b>3389</b> RDP (Windows Remote Desktop)</div>
+    </div>
+    <p class="hint">This is a <b>stateful</b> firewall, so it remembers connections it allowed and lets the replies back in automatically. You only write rules for the traffic that starts the connection.</p>
+    <button class="btn gold" onclick="go('rules')">Start Part 1 →</button>
+  </div>
+</section>
+
+<section id="rules" class="tab" hidden>
+  <div class="card">
+    <div class="levels" id="levelBtns"></div>
+    <h2 id="lvlTitle"></h2>
+    <div class="story" id="lvlStory"></div>
+    <h3>Firewall rules (ACL)</h3>
+    <table>
+      <thead><tr><th>#</th><th>Action</th><th>Protocol</th><th>Source</th><th>Destination</th><th>Port</th><th></th></tr></thead>
+      <tbody id="ruleBody"></tbody>
+    </table>
+    <button class="btn ghost" onclick="addRule()">+ Add rule</button>
+    <button class="btn gold" onclick="runTests()">▶ Send test traffic</button>
+    <button class="btn ghost" onclick="resetLevel()">↺ Reset level</button>
+    <button class="btn ghost" id="hintBtn" onclick="showHint()">💡 Hint</button>
+    <div id="hintBox"></div>
+    <h3>Test traffic</h3>
+    <table>
+      <thead><tr><th>Who</th><th>Packet</th><th>Should be</th><th>Firewall did</th><th>Matched</th></tr></thead>
+      <tbody id="testBody"></tbody>
+    </table>
+    <div id="lvlResult"></div>
+  </div>
+</section>
+
+<section id="logs" class="tab" hidden>
+  <div class="card">
+    <h2>Part 2: Log Detective</h2><p class="hint">You get 5 tries per case. A hint unlocks after your first wrong answer.</p>
+    <div class="story"><b>From: Carlos</b><br>Here are four log snippets from last night. For each one, tell me what happened and who did it. One of them might just be normal traffic.</div>
+    <div id="logArea"></div>
+  </div>
+</section>
+
+<section id="cert" class="tab" hidden>
+  <div class="card">
+    <p>Type your name, then screenshot this certificate and turn it in.</p>
+    <input type="text" id="stuName" placeholder="Your first and last name" oninput="drawCert()">
+    <div class="cert" id="certBox" style="margin-top:14px"></div>
+  </div>
+</section>
+</main>
+
+<script>
+const IP={parent:'74.12.8.20',carlos:'203.0.113.5',hacker:'198.51.100.66',rand:'91.200.5.14',student:'10.0.2.25'};
+const OPT={
+  action:['ALLOW','DENY'],
+  proto:['TCP','UDP','ANY'],
+  src:['ANY','203.0.113.5','198.51.100.66','10.0.2.0/24'],
+  dst:['ANY','10.0.1.10','10.0.2.0/24'],
+  port:['ANY','22','53','80','443','445','3389']
+};
+const LEVELS=[
+ {title:'Level 1 · Open the website',
+  story:'Families need to reach the school website at <b>10.0.1.10</b> over <b>HTTPS (443)</b>. We only use HTTPS, so plain HTTP (80) should stay blocked. Everything else should be blocked too.',
+  start:[],
+  tests:[
+   ['Parent','TCP',IP.parent,'10.0.1.10','443','ALLOW','Parent opens the school site'],
+   ['Parent','TCP',IP.parent,'10.0.1.10','80','DENY','Unencrypted HTTP request'],
+   ['Unknown','TCP',IP.rand,'10.0.1.10','3389','DENY','Remote Desktop attempt'],
+   ['Unknown','TCP',IP.rand,'10.0.2.25','445','DENY','File-sharing probe at a student laptop']]},
+ {title:'Level 2 · Carlos needs remote access',
+  story:'Carlos manages the web server from home using <b>SSH (port 22)</b>. His home IP is <b>203.0.113.5</b>. <i>Only</i> Carlos should get SSH. Hackers try port 22 all day long.',
+  start:[['ALLOW','TCP','ANY','10.0.1.10','443']],
+  tests:[
+   ['Carlos','TCP',IP.carlos,'10.0.1.10','22','ALLOW','Carlos logs in to fix the site'],
+   ['Unknown','TCP',IP.rand,'10.0.1.10','22','DENY','Stranger tries SSH'],
+   ['Parent','TCP',IP.parent,'10.0.1.10','443','ALLOW','Parent opens the school site']]},
+ {title:'Level 3 · Block the attacker',
+  story:'The IP <b>198.51.100.66</b> is hammering the website and trying everything. Block that IP from <b>everything</b>, but don\'t break the site for anyone else. <b>Hint:</b> think about rule order.',
+  start:[['ALLOW','TCP','ANY','10.0.1.10','443'],['ALLOW','TCP','203.0.113.5','10.0.1.10','22']],
+  tests:[
+   ['Attacker','TCP',IP.hacker,'10.0.1.10','443','DENY','Attacker floods the website'],
+   ['Attacker','TCP',IP.hacker,'10.0.1.10','22','DENY','Attacker tries SSH'],
+   ['Parent','TCP',IP.parent,'10.0.1.10','443','ALLOW','Parent opens the school site'],
+   ['Carlos','TCP',IP.carlos,'10.0.1.10','22','ALLOW','Carlos logs in']]},
+ {title:'Level 4 · Fix the bad config',
+  story:'A substitute tech "fixed" the firewall this morning. Now <i>everything</i> gets in. Find the problem. Also, campus devices (<b>10.0.2.0/24</b>) must be able to make <b>DNS lookups (UDP 53)</b> out to the internet, or nobody can load websites.',
+  start:[['ALLOW','ANY','ANY','ANY','ANY'],['DENY','TCP','ANY','ANY','3389'],['ALLOW','TCP','ANY','10.0.1.10','443']],
+  tests:[
+   ['Unknown','TCP',IP.rand,'10.0.2.25','3389','DENY','Remote Desktop at a student laptop'],
+   ['Unknown','TCP',IP.rand,'10.0.2.25','445','DENY','File-sharing probe'],
+   ['Parent','TCP',IP.parent,'10.0.1.10','443','ALLOW','Parent opens the school site'],
+   ['Student','UDP',IP.student,'8.8.8.8','53','ALLOW','Student laptop looks up a website name'],
+   ['Student','TCP',IP.student,'8.8.8.8','22','DENY','Student tries SSH out to the internet']]}
+];
+const LOGS=[
+ {name:'Log A',hint:'Look at the destination ports. Is one IP trying the same door over and over, or a different door each time?',type:'Port scan',ip:'185.220.101.7',
+  log:`23:14:02.101 DENY TCP 185.220.101.7:51122 -> 10.0.1.10:21
+23:14:02.103 DENY TCP 185.220.101.7:51123 -> 10.0.1.10:22
+23:14:02.104 DENY TCP 185.220.101.7:51124 -> 10.0.1.10:23
+23:14:02.106 DENY TCP 185.220.101.7:51125 -> 10.0.1.10:25
+23:14:02.107 ALLOW TCP 74.12.8.20:60311 -> 10.0.1.10:443
+23:14:02.109 DENY TCP 185.220.101.7:51126 -> 10.0.1.10:110
+23:14:02.111 DENY TCP 185.220.101.7:51127 -> 10.0.1.10:139
+23:14:02.112 ALLOW TCP 185.220.101.7:51128 -> 10.0.1.10:443
+23:14:02.114 DENY TCP 185.220.101.7:51129 -> 10.0.1.10:445
+23:14:02.116 DENY TCP 185.220.101.7:51130 -> 10.0.1.10:3389`,
+  ips:['185.220.101.7','74.12.8.20','10.0.1.10'],
+  why:'One IP tried a different port every couple of milliseconds. That\'s a <b>port scan</b>: reconnaissance to find open services. The 74.12.8.20 line is just a parent on port 443. A NIDS spots this with a signature (many ports, one source, short time).'},
+ {name:'Log B',hint:'Count the word \'Failed\'. Are they all from the same IP? Which login actually worked, and is that person allowed?',type:'Brute-force login',ip:'45.155.204.9',
+  log:`02:41:10 sshd: Failed password for admin from 45.155.204.9
+02:41:11 sshd: Failed password for admin from 45.155.204.9
+02:41:11 sshd: Failed password for root from 45.155.204.9
+02:41:12 sshd: Failed password for administrator from 45.155.204.9
+02:41:13 sshd: Failed password for admin from 45.155.204.9
+02:41:13 sshd: Failed password for test from 45.155.204.9
+   ... 1,214 more failed attempts ...
+06:02:47 sshd: Accepted password for carlos from 203.0.113.5`,
+  ips:['45.155.204.9','203.0.113.5','10.0.1.10'],
+  why:'Hundreds of failed passwords against common usernames from one IP is a <b>brute-force attack</b>. Carlos\'s single successful login is normal. Fixes: allow SSH only from Carlos\'s IP (like Level 2), account lockout, and MFA.'},
+ {name:'Log C',hint:'Look at count=. How many requests per second is normal for one visitor? What happened to the server?',type:'DoS flood',ip:'102.88.4.31',
+  log:`03:00:00  TCP SYN  102.88.4.31 -> 10.0.1.10:443   count=4,812/sec
+03:00:01  TCP SYN  102.88.4.31 -> 10.0.1.10:443   count=5,090/sec
+03:00:02  TCP SYN  102.88.4.31 -> 10.0.1.10:443   count=5,377/sec
+03:00:02  TCP SYN  74.12.8.20  -> 10.0.1.10:443   count=1/sec
+03:00:03  WEB SERVER: connection table full, dropping new connections
+03:00:03  TCP SYN  102.88.4.31 -> 10.0.1.10:443   count=5,602/sec`,
+  ips:['102.88.4.31','74.12.8.20','10.0.1.10'],
+  why:'Thousands of connection requests per second from one source filled up the server so real visitors got dropped. That\'s a <b>denial-of-service (SYN flood)</b>. An anomaly-based tool catches it because traffic jumped far above normal. Response: block the IP (Level 3) and rate-limit.'},
+ {name:'Log D',hint:'Check each line: DNS on 53, websites on 443, Carlos on 22 from his approved IP. Is anything actually wrong?',type:'Normal traffic',ip:'None (no attack)',
+  log:`07:45:12 ALLOW UDP 10.0.2.25:53001 -> 8.8.8.8:53
+07:45:12 ALLOW TCP 10.0.2.25:61022 -> 142.250.72.14:443
+07:45:30 ALLOW TCP 74.12.8.20:60412 -> 10.0.1.10:443
+07:46:05 ALLOW UDP 10.0.2.41:53044 -> 8.8.8.8:53
+07:46:05 ALLOW TCP 10.0.2.41:61101 -> 151.101.1.69:443
+07:47:19 ALLOW TCP 203.0.113.5:52210 -> 10.0.1.10:22`,
+  ips:['10.0.2.25','74.12.8.20','203.0.113.5'],
+  why:'This is a normal morning: DNS lookups, students on HTTPS sites, a parent on the school site, and Carlos on SSH from his approved IP. Not every log is an attack. Too many false alarms is a real problem for analysts.'}
+];
+const HINTS=[
+ ['Remember: anything with no matching rule is blocked automatically (implicit deny). You only need rules for traffic you want to ALLOW.','Which packet should be allowed? A parent going to 10.0.1.10 on port 443.','Add one rule: ALLOW · TCP · ANY · 10.0.1.10 · 443.'],
+ ['SSH is port 22. Should EVERYONE get port 22, or just one person?','Only Carlos (203.0.113.5) should get SSH. Make the source his IP, not ANY.','Add: ALLOW · TCP · 203.0.113.5 · 10.0.1.10 · 22.'],
+ ['You need a DENY rule for the attacker, 198.51.100.66, on every protocol and port.','You added a DENY but the attacker still gets in? The firewall stops at the FIRST match. Which rule is the attacker hitting first?','Add: DENY · ANY · 198.51.100.66 · ANY · ANY, then use ▲ to move it to rule 1.'],
+ ['Look at rule 1. What does ALLOW ANY ANY ANY ANY match? Since the first match wins, do the rules below it ever get used?','Delete rule 1. Then think about DNS: protocol UDP, port 53, coming FROM campus devices.','Delete rule 1, then add: ALLOW · UDP · 10.0.2.0/24 · ANY · 53.']
+];
+const TYPES=['Port scan','Brute-force login','DoS flood','Normal traffic'];
+
+let S={att:[0,0,0,0],lvl:0,rules:LEVELS.map(l=>clone(l.start)),done:[false,false,false,false],logAns:{},order:null};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function save(){try{localStorage.setItem('lancerFW',JSON.stringify(S))}catch(e){}}
+try{const s=JSON.parse(localStorage.getItem('lancerFW'));if(s&&s.rules)S=s}catch(e){}
+if(!S.att)S.att=[0,0,0,0];
+if(!S.order){S.order=LOGS.map((_,i)=>i).sort(()=>Math.random()-.5);save()}
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+function go(t){document.querySelectorAll('.tab').forEach(s=>s.hidden=s.id!==t);
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+ if(t==='cert')drawCert();window.scrollTo(0,0)}
+
+function drawLevels(){
+ document.getElementById('levelBtns').innerHTML=LEVELS.map((l,i)=>`<button class="${i===S.lvl?'on':''} ${S.done[i]?'done':''}" onclick="setLvl(${i})">Level ${i+1}</button>`).join('');
+ const L=LEVELS[S.lvl];
+ document.getElementById('lvlTitle').textContent=L.title;
+ document.getElementById('lvlStory').innerHTML=L.story;
+ drawRules();drawTests(null);document.getElementById('lvlResult').innerHTML='';document.getElementById('hintBox').innerHTML='';drawHintBtn();
+}
+function setLvl(i){S.lvl=i;save();drawLevels()}
+function sel(field,val,r,c){return `<select onchange="setCell(${r},${c},this.value)">`+OPT[field].map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')+'</select>'}
+function drawRules(hit){
+ const R=S.rules[S.lvl];const f=['action','proto','src','dst','port'];
+ let h=R.map((r,i)=>`<tr class="${hit===i?'hit':''}"><td>${i+1}</td>${r.map((v,c)=>`<td>${sel(f[c],v,i,c)}</td>`).join('')}
+  <td style="white-space:nowrap"><button class="mini" title="Move up" onclick="mv(${i},-1)">▲</button> <button class="mini" title="Move down" onclick="mv(${i},1)">▼</button> <button class="mini" title="Delete" onclick="del(${i})">✕</button></td></tr>`).join('');
+ h+=`<tr class="implicit"><td>*</td><td><span class="tag deny">DENY</span></td><td>ANY</td><td>ANY</td><td>ANY</td><td>ANY</td><td>implicit deny</td></tr>`;
+ document.getElementById('ruleBody').innerHTML=h;
+}
+function setCell(r,c,v){S.rules[S.lvl][r][c]=v;save();clearRes()}
+function mv(i,d){const R=S.rules[S.lvl],j=i+d;if(j<0||j>=R.length)return;[R[i],R[j]]=[R[j],R[i]];save();drawRules();clearRes()}
+function del(i){S.rules[S.lvl].splice(i,1);save();drawRules();clearRes()}
+function addRule(){S.rules[S.lvl].push(['ALLOW','TCP','ANY','ANY','ANY']);save();drawRules();clearRes()}
+function resetLevel(){S.rules[S.lvl]=clone(LEVELS[S.lvl].start);save();drawLevels()}
+function clearRes(){drawTests(null);document.getElementById('lvlResult').innerHTML=''}
+
+function ipMatch(rule,ip){if(rule==='ANY')return true;if(rule.endsWith('/24'))return ip.startsWith(rule.split('.').slice(0,3).join('.')+'.');return rule===ip}
+function evalPkt(p){const R=S.rules[S.lvl];
+ for(let i=0;i<R.length;i++){const [a,pr,s,d,po]=R[i];
+  if((pr==='ANY'||pr===p[1])&&ipMatch(s,p[2])&&ipMatch(d,p[3])&&(po==='ANY'||po===p[4]))return {act:a,rule:i}}
+ return {act:'DENY',rule:-1}}
+function drawTests(res){
+ const T=LEVELS[S.lvl].tests;
+ document.getElementById('testBody').innerHTML=T.map((t,i)=>{const r=res&&res[i];
+  return `<tr class="${r?(r.act===t[5]?'pass':'fail'):''}"><td><b>${t[0]}</b><br><span class="hint">${t[6]}</span></td>
+  <td style="font-family:ui-monospace,Consolas,monospace;font-size:12.5px">${t[1]} ${t[2]} → ${t[3]}:${t[4]}</td>
+  <td><span class="tag ${t[5].toLowerCase()}">${t[5]}</span></td>
+  <td>${r?`<span class="tag ${r.act.toLowerCase()}">${r.act}</span> ${r.act===t[5]?'✅':'❌'}`:'<span class="hint">—</span>'}</td>
+  <td>${r?(r.rule<0?'implicit deny':'rule '+(r.rule+1)):''}</td></tr>${r&&r.act!==t[5]&&S.att[S.lvl]>=2?`<tr><td colspan="5" class="hint" style="background:#fff4f2">🤔 ${explain(t,r)}</td></tr>`:''}`}).join('');
+}
+function explain(t,r){
+ const R=S.rules[S.lvl];
+ if(t[5]==='ALLOW'&&r.rule<0)return `No rule matched this packet, so implicit deny blocked it. You need an ALLOW rule that matches ${t[1]}, from ${t[2]}, to ${t[3]}, on port ${t[4]}. Check that every field matches.`;
+ if(t[5]==='ALLOW')return `Rule ${r.rule+1} DENIED this packet before it reached any ALLOW rule. Is that DENY too broad, or is it in the wrong spot?`;
+ const x=R[r.rule];const broad=x.filter(v=>v==='ANY').length;
+ return `Rule ${r.rule+1} ALLOWED this packet. ${broad>=3?'That rule uses ANY in a lot of fields, so it matches more traffic than you want.':'Does this rule need a more specific source, destination, or port?'} If there's a DENY lower down, the firewall never reaches it, because the first match wins.`}
+const UNLOCK=[2,3,4]; // failed tries needed for hint 1, 2, 3
+function hintsAvail(){return UNLOCK.filter(u=>S.att[S.lvl]>=u).length}
+function drawHintBtn(){const b=document.getElementById('hintBtn');if(!b)return;const a=hintsAvail(),done=S.done[S.lvl];
+ if(done){b.disabled=true;b.style.opacity=.5;b.textContent='💡 Hint';return}
+ if(a===0){const left=UNLOCK[0]-S.att[S.lvl];b.disabled=true;b.style.opacity=.5;b.textContent=`🔒 Hint unlocks after ${left} more ${left===1?'try':'tries'}`}
+ else{b.disabled=false;b.style.opacity=1;b.textContent=`💡 Hint (${a} of 3 unlocked)`}}
+function showHint(){const a=hintsAvail();if(!a)return;const n=a-1;
+ document.getElementById('hintBox').innerHTML=HINTS[S.lvl].slice(0,n+1).map((h,i)=>`<div class="story" style="margin-top:8px"><b>Hint ${i+1}${i===2?' (answer)':''}:</b> ${h}</div>`).join('')+(n<2?`<p class="hint">Next hint unlocks after ${UNLOCK[n+1]-S.att[S.lvl]} more ${UNLOCK[n+1]-S.att[S.lvl]===1?'try':'tries'}.</p>`:'');}
+function runTests(){
+ const T=LEVELS[S.lvl].tests;const res=T.map(evalPkt);drawTests(res);
+ const bad=res.filter((r,i)=>r.act!==T[i][5]).length;const el=document.getElementById('lvlResult');
+ if(bad&&!S.done[S.lvl]){S.att[S.lvl]++;save();}
+ if(!bad){S.done[S.lvl]=true;save();
+  el.innerHTML=`<div class="result ok">✅ Every packet did what it should. Level ${S.lvl+1} secured!${S.lvl<3?` <button class="btn" onclick="setLvl(${S.lvl+1})">Next level →</button>`:` <button class="btn" onclick="go('logs')">On to Part 2 →</button>`}</div>`;
+  document.querySelectorAll('#levelBtns button')[S.lvl].classList.add('done');
+ }else el.innerHTML=`<div class="result no">❌ ${bad} packet${bad>1?'s':''} went the wrong way. Look at the "Matched" column: which rule caught it first?</div>`;
+ drawHintBtn();
+}
+
+function drawLogs(){
+ document.getElementById('logArea').innerHTML=S.order.map((li,n)=>{const L=LOGS[li],A=S.logAns[li]||{};
+  const ipOpts=[...L.ips].sort().concat(['None (no attack)']);
+  const typeBtns=TYPES.map(t=>btn(li,'type',t,A,L.type)).join('');
+  const ipBtns=ipOpts.map(t=>btn(li,'ip',t,A,L.ip)).join('');
+  const checked=A.checked;
+  return `<div class="card" style="border:1px solid #e3e7ef"><h3>Case ${n+1}</h3><pre class="log">${L.log}</pre>
+   <div class="q"><b>1. What is happening?</b><div class="opts">${typeBtns}</div></div>
+   <div class="q"><b>2. Which IP is the attacker?</b><div class="opts">${ipBtns}</div></div>
+   ${!checked&&(A.tries||0)>=1?`<div class="result no" style="font-weight:400">❌ Not quite. Try again (${5-A.tries} ${5-A.tries===1?'try':'tries'} left).</div><details class="hint" style="margin:6px 0"><summary>💡 Hint unlocked: click to open</summary>${L.hint}</details>`:''}
+   ${checked?`<div class="result ${A.type===L.type&&A.ip===L.ip?'ok':'no'}">${A.type===L.type&&A.ip===L.ip?'✅ Correct!':'❌ Out of tries. The correct answers are highlighted in green.'}<div style="font-weight:400;margin-top:6px">${L.why}</div></div>`
+   :`<button class="btn" onclick="checkLog(${li})" ${A.type&&A.ip?'':'disabled style="opacity:.5"'}>Check answer</button>`}</div>`}).join('');
+}
+function btn(li,k,t,A,correct){let c='';
+ if(A.checked){if(t===correct)c='right';else if(A[k]===t)c='wrong'}else if(A[k]===t)c='sel';
+ return `<button class="${c}" ${A.checked?'disabled':''} onclick="pick(${li},'${k}','${t}')">${t}</button>`}
+function pick(li,k,v){S.logAns[li]=S.logAns[li]||{};S.logAns[li][k]=v;save();drawLogs()}
+function checkLog(li){const A=S.logAns[li],L=LOGS[li];const ok=A.type===L.type&&A.ip===L.ip;
+ if(ok){A.checked=true;A.correct=true}else{A.tries=(A.tries||0)+1;if(A.tries>=5){A.checked=true;A.correct=false}}
+ save();drawLogs()}
+
+function drawCert(){
+ const name=(document.getElementById('stuName').value||'').trim();
+ const lv=S.done.filter(Boolean).length;
+ const lg=LOGS.filter((_,i)=>S.logAns[i]&&S.logAns[i].correct).length;
+ const checked=LOGS.filter((_,i)=>S.logAns[i]&&S.logAns[i].checked).length;
+ let h=0;const str=name.toLowerCase()+'|'+lv+'|'+lg;for(const ch of str)h=(h*31+ch.charCodeAt(0))>>>0;
+ const code='FW-'+lv+lg+'-'+(h%100000).toString().padStart(5,'0');
+ document.getElementById('certBox').innerHTML=`<div style="font-size:40px">🛡️</div><h2>Certificate of Network Defense</h2>
+  <p>This certifies that</p><p style="font-size:24px;font-weight:700;color:#0f2347">${name?escapeHtml(name):'<span class="hint">(type your name above)</span>'}</p>
+  <p>completed the Lancer Firewall Lab for Cambridge Christian IT</p>
+  <p><b>Firewall levels secured:</b> ${lv} / 4 &nbsp;·&nbsp; <b>Logs solved correctly:</b> ${lg} / 4 ${checked<4?'<span class="hint">('+(4-checked)+' not answered yet)</span>':''}</p>
+  <p>Verification code: <span class="code">${code}</span></p>
+  <p class="hint">${new Date().toLocaleDateString()} · Signed, Carlos, IT Director</p>
+  ${lv===4&&lg===4?'<p style="color:#1e8a4c;font-weight:700">⭐ Perfect score: full network defender!</p>':''}`;
+}
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+
+const SLIDES=[
+`<div class="big">🧱</div><h2>What is a firewall?</h2>
+<p>A <b>firewall</b> is a security tool that checks network traffic and decides to <b>allow</b> or <b>deny</b> it based on a list of rules.</p>
+<p>Think of the security guard at the Cambridge front gate. The guard checks every car: who you are, where you're going, and whether you're on the list. A firewall does the same thing for every <b>packet</b> of data.</p>
+<p>A firewall can be software or a hardware device. It can guard a whole network (<b>network-based</b>) or just one computer (<b>host-based</b>).</p>`,
+`<h2>Three types of firewalls</h2><div class="two">
+<div class="box"><h4>Stateless (packet filter)</h4>Reads only the packet's header: IP addresses, protocol, port. Every packet is judged alone. Fast, but easy to fool.</div>
+<div class="box"><h4>Stateful</h4>Remembers connections. If you started a conversation, it lets the replies back in automatically. Our lab firewall is stateful.</div>
+<div class="box"><h4>Next-generation (NGFW)</h4>Does everything stateful does, <b>plus</b> looks inside the packet (deep packet inspection), knows which apps are in use, and can block known attacks.</div></div>
+<div class="q-check">🤔 <b>Quick check:</b> A firewall only looks at the IP and port of each packet, one at a time. Which type is it? <i>(stateless)</i></div>`,
+`<h2>Where do firewalls go?</h2>
+<ul><li><b>Perimeter:</b> between the internet and the school network. This is the front gate.</li>
+<li><b>Screened subnet (DMZ):</b> public servers, like the school website, sit in their own zone. If one gets hacked, the attacker still isn't inside the campus network.</li>
+<li><b>Between segments:</b> firewalls between networks, like staff, students, and cameras, stop an attacker from moving sideways.</li>
+<li><b>Host-based:</b> a firewall on each laptop is the last line of defense.</li></ul>
+<p>Using many layers like this is called <b>defense in depth</b>.</p>`,
+`<h2>Firewall rules = an ACL</h2>
+<p>The rule list is called an <b>Access Control List (ACL)</b>. Each rule has 5 parts:</p>
+<table><thead><tr><th>Action</th><th>Protocol</th><th>Source</th><th>Destination</th><th>Port</th></tr></thead>
+<tbody><tr><td><span class="tag allow">ALLOW</span></td><td>TCP</td><td>ANY</td><td>10.0.1.10</td><td>443</td></tr>
+<tr><td><span class="tag deny">DENY</span></td><td>ANY</td><td>198.51.100.66</td><td>ANY</td><td>ANY</td></tr></tbody></table>
+<p>Rule 1, in plain English: "Anyone may reach the web server using HTTPS."<br>Rule 2: "Block that one IP address from everything."</p>`,
+`<h2>How the firewall reads the list</h2>
+<div class="two"><div class="box"><h4>1️⃣ Top to bottom</h4>Each packet is checked against rule 1, then rule 2, and so on.</div>
+<div class="box"><h4>2️⃣ First match wins</h4>The firewall stops at the first rule that matches. Rules lower down are never checked.</div>
+<div class="box"><h4>3️⃣ Implicit deny</h4>No match at all? The packet is blocked. This is called "default deny."</div></div>
+<div class="q-check">🤔 <b>AP-style question:</b> Rule 1 is ALLOW TCP ANY → ANY, ANY. Rule 2 is DENY TCP ANY → 10.0.1.10, port 22. Is SSH to 10.0.1.10 blocked?<br><i>No! Rule 1 matches first and allows it. Rule 2 never gets checked. Specific DENY rules go at the top.</i></div>`,
+`<h2>Ports: the doors into a computer</h2><p>A <b>port</b> number tells the computer which service the traffic is for.</p>
+<div class="two"><div class="box"><b>22</b> SSH: remote admin login</div><div class="box"><b>53</b> DNS: turns names into IP addresses (UDP)</div>
+<div class="box"><b>80</b> HTTP: unencrypted web</div><div class="box"><b>443</b> HTTPS: encrypted web</div>
+<div class="box"><b>445</b> SMB: Windows file sharing</div><div class="box"><b>3389</b> RDP: Windows Remote Desktop</div></div>
+<p>Rule of thumb: <b>only open the doors you need</b> (least privilege). Attackers love open 22, 445, and 3389.</p>`,
+`<h2>Detecting network attacks</h2><div class="two">
+<div class="box"><h4>NIDS: Intrusion <u>Detection</u></h4>Watches a copy of the traffic and <b>sends alerts</b>, like a security camera.</div>
+<div class="box"><h4>NIPS: Intrusion <u>Prevention</u></h4>Sits <b>inline</b> and can <b>block</b> attacks, like a guard. If it makes a mistake, it can block real users too.</div>
+<div class="box"><h4>SIEM</h4>Collects logs from firewalls, servers, and devices in one place so analysts can connect the dots.</div></div>
+<div class="two" style="margin-top:12px"><div class="box"><h4>Signature-based</h4>Matches known attack patterns. Great for known attacks, misses new ones.</div>
+<div class="box"><h4>Anomaly-based (often AI)</h4>Learns what "normal" looks like and flags anything unusual. Catches new attacks, but gives more <b>false positives</b>.</div></div>`,
+`<h2>What attacks look like in a log</h2><div class="two">
+<div class="box"><h4>🔍 Port scan</h4>One IP tries <b>many different ports</b> in a few seconds. The attacker is looking for an open door.</div>
+<div class="box"><h4>🔑 Brute force</h4>Many <b>failed logins</b> from one IP, often guessing usernames like admin and root.</div>
+<div class="box"><h4>🌊 DoS flood</h4>A <b>huge number of requests</b> to one service until it can't serve real users.</div>
+<div class="box"><h4>✅ Normal</h4>Expected ports, approved users, normal amounts of traffic. Not every log is an attack!</div></div>
+<p>Analyst tip: look for <b>who</b> (source IP), <b>how many</b> (counts and timing), and <b>what</b> (ports or usernames).</p>`,
+`<div class="big">🛡️</div><h2>Your mission</h2>
+<p>Carlos, the IT Director, needs you to:</p>
+<ul><li><b>Part 1:</b> rebuild the Cambridge firewall rules across 4 levels</li><li><b>Part 2:</b> read 4 logs and catch the attackers</li><li>Earn your <b>certificate</b> and turn in a screenshot</li></ul>
+<p>Hints unlock after you've tried a few times. Your progress saves automatically.</p>
+<p style="text-align:center"><button class="btn gold" onclick="go('brief')">Go to the briefing →</button></p>`
+];
+let si=0;
+function drawSlide(){document.getElementById('slide').innerHTML=SLIDES[si];
+ document.getElementById('slideNum').textContent=`Slide ${si+1} of ${SLIDES.length}`;
+ document.getElementById('dots').innerHTML=SLIDES.map((_,i)=>`<span class="${i===si?'on':''}"></span>`).join('');
+ document.getElementById('nextBtn').style.visibility=si===SLIDES.length-1?'hidden':'visible'}
+function slideGo(d){si=Math.max(0,Math.min(SLIDES.length-1,si+d));drawSlide()}
+document.addEventListener('keydown',e=>{if(!document.getElementById('lesson').hidden&&e.target.tagName!=='INPUT'){if(e.key==='ArrowRight')slideGo(1);if(e.key==='ArrowLeft')slideGo(-1)}});
+drawSlide();drawLevels();drawLogs();
+</script>
+</body>
+</html>
